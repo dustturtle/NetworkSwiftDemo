@@ -17,23 +17,29 @@ class ListenerVC: UIViewController {
     {
         self.statusLabel.text = "Listening"
         
-        self.listener = try! NWListener(parameters: .tcp, port: NWEndpoint.Port.init(self.portInput.text!)!)!
-        self.listener!.newConnectionHandler = { (newConnection) in
+        if (self.portInput.text == nil || (self.portInput.text?.isEmpty)!)
+        {
+            print ("port invalid! can not listen!")
+            return;
+        }
+        
+        self.listener = try! NWListener(parameters: .tcp, port: NWEndpoint.Port.init(self.portInput.text!)!)
+        self.listener.newConnectionHandler = { (newConnection) in
             newConnection.start(queue: .main)
             self.fromLabel.text = newConnection.endpoint.debugDescription
             self.receiveLoop(connection: newConnection)
         }
         
-        self.listener!.stateUpdateHandler = { (state) in
+        self.listener.stateUpdateHandler = { (state) in
             print (state)
         }
         
-        self.listener!.start(queue: .main)
-        //dump(listener)
+        self.listener.start(queue: .main)
+        dump(listener)
     }
     
     @IBAction func stopListen(_ sender: Any) {
-        self.listener!.cancel()
+        self.listener.cancel()
         self.fromLabel.text = "None"
         self.infoLabel.text = ""
         
@@ -46,7 +52,7 @@ class ListenerVC: UIViewController {
     @IBOutlet weak var fromLabel: UILabel!
     @IBOutlet weak var infoLabel: UILabel!
     
-    var listener:NWListener?
+    var listener:NWListener!
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -64,7 +70,7 @@ class ListenerVC: UIViewController {
             {
                 print("Complete")
                 self.infoLabel.text = ""
-                self.listener?.cancel()
+                self.listener.cancel()
                 self.fromLabel.text = "None"
                 
                 self.statusLabel.text = "Stopped"
