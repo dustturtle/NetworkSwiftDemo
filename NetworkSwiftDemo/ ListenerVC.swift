@@ -11,7 +11,12 @@ import Network
 
 class ListenerVC: UIViewController {
     
-    @IBAction func startListen(_ sender: Any) {
+    @IBOutlet weak var statusLabel: UILabel!
+    
+    @IBAction func startListen(_ sender: Any)
+    {
+        self.statusLabel.text = "Listening"
+        
         self.listener = try! NWListener(parameters: .tcp, port: NWEndpoint.Port.init(self.portInput.text!)!)!
         self.listener!.newConnectionHandler = { (newConnection) in
             newConnection.start(queue: .main)
@@ -31,6 +36,8 @@ class ListenerVC: UIViewController {
         self.listener!.cancel()
         self.fromLabel.text = "None"
         self.infoLabel.text = ""
+        
+        self.statusLabel.text = "Stopped"
     }
     
     @IBOutlet weak var portInput: UITextField!
@@ -59,6 +66,8 @@ class ListenerVC: UIViewController {
                 self.infoLabel.text = ""
                 self.listener?.cancel()
                 self.fromLabel.text = "None"
+                
+                self.statusLabel.text = "Stopped"
             }
             else
             {
