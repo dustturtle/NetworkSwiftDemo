@@ -21,6 +21,7 @@ class ListenerVC: UIViewController {
     
     @IBAction func startListen(_ sender: Any)
     {
+        NetworkHelper.shared.printSmile()
         statusLabel.text = "Listening"
         
         if (portInput.text == nil || (portInput.text?.isEmpty)!)

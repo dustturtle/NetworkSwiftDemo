@@ -14,4 +14,8 @@ class NetworkHelper {
     static let shared = NetworkHelper()
     
     private init(){}
+    
+    func printSmile() {
+        print(":] This is ray smile!")
+    }
 }
