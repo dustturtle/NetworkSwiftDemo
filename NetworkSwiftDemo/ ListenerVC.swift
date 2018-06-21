@@ -10,56 +10,52 @@ import UIKit
 import Network
 
 class ListenerVC: UIViewController {
+    var listener: NWListener!
     
     @IBOutlet weak var statusLabel: UILabel!
-    
-    @IBAction func startListen(_ sender: Any)
-    {
-        self.statusLabel.text = "Listening"
-        
-        if (self.portInput.text == nil || (self.portInput.text?.isEmpty)!)
-        {
-            print ("port invalid! can not listen!")
-            return;
-        }
-        
-        self.listener = try! NWListener(parameters: .tcp, port: NWEndpoint.Port.init(self.portInput.text!)!)
-        self.listener.newConnectionHandler = { (newConnection) in
-            newConnection.start(queue: .main)
-            self.fromLabel.text = newConnection.endpoint.debugDescription
-            self.receiveLoop(connection: newConnection)
-        }
-        
-        self.listener.stateUpdateHandler = { (state) in
-            print (state)
-        }
-        
-        self.listener.start(queue: .main)
-        dump(listener)
-    }
-    
-    @IBAction func stopListen(_ sender: Any) {
-        self.listener.cancel()
-        self.fromLabel.text = "None"
-        self.infoLabel.text = ""
-        
-        self.statusLabel.text = "Stopped"
-    }
-    
     @IBOutlet weak var portInput: UITextField!
     
     // connecting messages...
     @IBOutlet weak var fromLabel: UILabel!
     @IBOutlet weak var infoLabel: UILabel!
     
-    var listener:NWListener!
+    @IBAction func startListen(_ sender: Any)
+    {
+        statusLabel.text = "Listening"
+        
+        if (portInput.text == nil || (portInput.text?.isEmpty)!)
+        {
+            print ("port invalid! can not listen!")
+            return;
+        }
+        
+        listener = try! NWListener(parameters: .tcp, port: NWEndpoint.Port.init(portInput.text!)!)
+        listener.newConnectionHandler = { (newConnection) in
+            newConnection.start(queue: .main)
+            self.fromLabel.text = newConnection.endpoint.debugDescription
+            self.receiveLoop(connection: newConnection)
+        }
+        
+        listener.stateUpdateHandler = { (state) in
+            print (state)
+        }
+        
+        listener.start(queue: .main)
+        dump(listener)
+    }
+    
+    @IBAction func stopListen(_ sender: Any) {
+        listener.cancel()
+        fromLabel.text = "None"
+        infoLabel.text = ""
+        statusLabel.text = "Stopped"
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        self.title = "Listener"
-
         // Do any additional setup after loading the view.
+        
+        title = "Listener"
     }
     
     func receiveLoop (connection:NWConnection)
@@ -72,14 +68,12 @@ class ListenerVC: UIViewController {
                 self.infoLabel.text = ""
                 self.listener.cancel()
                 self.fromLabel.text = "None"
-                
                 self.statusLabel.text = "Stopped"
             }
             else
             {
                 print("notComplete")
-                
-                let str =  NSString(data:content! ,encoding: String.Encoding.utf8.rawValue)
+                let str = NSString(data:content! ,encoding: String.Encoding.utf8.rawValue)
                 print(str!)
                 self.infoLabel.text = str! as String
                 self.receiveLoop(connection: connection)
@@ -88,15 +82,4 @@ class ListenerVC: UIViewController {
             // DispatchIO.. not needed here.
         }
     }
-
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destination.
-        // Pass the selected object to the new view controller.
-    }
-    */
-
 }
