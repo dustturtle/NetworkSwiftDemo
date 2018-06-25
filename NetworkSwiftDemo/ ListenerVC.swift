@@ -11,7 +11,9 @@ import Network
 
 class ListenerVC: UIViewController {
     var listener: NWListener!
+    var isTCP: Bool = true;
     
+    @IBOutlet weak var protocolSwitch: UISwitch!
     @IBOutlet weak var statusLabel: UILabel!
     @IBOutlet weak var portInput: UITextField!
     
@@ -24,16 +26,25 @@ class ListenerVC: UIViewController {
         NetworkHelper.shared.printSmile()
         statusLabel.text = "Listening"
         
-        if (portInput.text == nil || (portInput.text?.isEmpty)!)
+        if portInput.text == nil || (portInput.text?.isEmpty)!
         {
             print ("port invalid! can not listen!")
             return;
         }
         
-        listener = try! NWListener(parameters: .tcp, port: NWEndpoint.Port.init(portInput.text!)!)
+        if protocolSwitch.isOn
+        {
+            listener = try! NWListener(parameters: .tcp, port: NWEndpoint.Port.init(portInput.text!)!)
+        }
+        else
+        {
+            listener = try! NWListener(parameters: .udp, port: NWEndpoint.Port.init(portInput.text!)!)
+        }
+
         listener.newConnectionHandler = { (newConnection) in
             newConnection.start(queue: .main)
             self.fromLabel.text = newConnection.endpoint.debugDescription
+            
             self.receiveLoop(connection: newConnection)
         }
         
@@ -63,23 +74,45 @@ class ListenerVC: UIViewController {
     {
         connection.receive(minimumIncompleteLength: 1, maximumLength: Int(UINT32_MAX))
         { (content, context, isComplete, receiveError) in
-            if isComplete
+            if (self.protocolSwitch.isOn)
             {
-                print("Complete")
-                self.infoLabel.text = ""
-                self.listener.cancel()
-                self.fromLabel.text = "None"
-                self.statusLabel.text = "Stopped"
+                // means tcp;  TODO:logic not strict, needs improvement.
+                if isComplete
+                {
+                    print("Complete")
+                    self.infoLabel.text = ""
+                    self.listener.cancel()
+                    self.fromLabel.text = "None"
+                    self.statusLabel.text = "Stopped"
+                }
+                else
+                {
+                    print("notComplete")
+                    let str = NSString(data:content! ,encoding: String.Encoding.utf8.rawValue)
+                    print(str!)
+                    self.infoLabel.text = str! as String
+                    self.receiveLoop(connection: connection)
+                }
             }
             else
             {
-                print("notComplete")
-                let str = NSString(data:content! ,encoding: String.Encoding.utf8.rawValue)
-                print(str!)
-                self.infoLabel.text = str! as String
-                self.receiveLoop(connection: connection)
+                if context!.isFinal
+                {
+                    print("Complete")
+                    self.infoLabel.text = ""
+                    self.listener.cancel()
+                    self.fromLabel.text = "None"
+                    self.statusLabel.text = "Stopped"
+                }
+                else
+                {
+                    print("notComplete")
+                    let str = NSString(data:content! ,encoding: String.Encoding.utf8.rawValue)
+                    print(str!)
+                    self.infoLabel.text = str! as String
+                    self.receiveLoop(connection: connection)
+                }
             }
-        
             // DispatchIO.. not needed here.
         }
     }
