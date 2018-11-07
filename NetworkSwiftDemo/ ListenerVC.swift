@@ -34,11 +34,11 @@ class ListenerVC: UIViewController {
         
         if protocolSwitch.isOn
         {
-            listener = try! NWListener(parameters: .tcp, port: NWEndpoint.Port.init(portInput.text!)!)
+            listener = try! NWListener(using: .tcp, on: NWEndpoint.Port.init(portInput.text!)!)
         }
         else
         {
-            listener = try! NWListener(parameters: .udp, port: NWEndpoint.Port.init(portInput.text!)!)
+            listener = try! NWListener(using: .udp, on: NWEndpoint.Port.init(portInput.text!)!)
         }
 
         listener.newConnectionHandler = { (newConnection) in
